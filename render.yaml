@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: botard-server
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: gunicorn server:app
