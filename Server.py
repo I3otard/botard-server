@@ -146,3 +146,4 @@ if __name__ == "__main__":
     monitor_thread.start()
     logger.info("Started monitoring botard_alert.json and rules_urgent.json")
     app.run(host='0.0.0.0', port=8000, debug=False)
+

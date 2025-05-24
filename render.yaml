@@ -1,3 +1,4 @@
+
 services:
   - type: web
     name: botard-server
@@ -5,3 +6,4 @@ services:
     plan: free
     buildCommand: ""
     startCommand: gunicorn server:app
+

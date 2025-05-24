@@ -1,7 +1,9 @@
+
 {
     "message": "BUY signal from Botard",
     "signal": "buy",
     "confidence": 0.95,
     "price": 2357.4,
     "timestamp": "2025-05-24T20:22:52.895805"
+
 }
