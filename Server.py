@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 WEBHOOK_SECRET = ""  # Set this for security
 FILES_TO_MONITOR = ["botard_alert.json", "", ""]
 CHECK_INTERVAL = 5
-TRADINGVIEW_WEBHOOK_URL = "https://1516-73-142-250-127.ngrok-free.app"  # Replace with actual ngrok URL
+TRADINGVIEW_WEBHOOK_URL = "https://botard-server.onrender.com"  # Replace with actual ngrok URL
 
 @retry(stop_max_attempt_number=3, wait_fixed=5000)
 def send_webhook_to_tradingview(rules):
