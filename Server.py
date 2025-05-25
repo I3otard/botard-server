@@ -121,6 +121,15 @@ def get_file_hash(filepath):
         logger.error(f"Error calculating hash for {filepath}: {e}")
         return None
 
+@app.route('/signal-text')
+def signal_text():
+    try:
+        with open("botard_alert.json", "r") as f:
+            signal_data = json.load(f)
+        return signal_data["signal"]
+    except Exception as e:
+        return "none"
+
 def monitor_rules_files():
     last_hashes = {file: None for file in FILES_TO_MONITOR}
     while True:
