@@ -1,0 +1,8 @@
+﻿.env
+*.log
+*.json
+*.sqlite
+*.db
+*.pkl
+__pycache__/
+*.pyc
