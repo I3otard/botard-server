@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 TELEGRAM_BOT_TOKEN = "7836750392:AAFddan2pP9J95kbG3GDhyQk18mG2OqQkms"  # Replace with your Telegram bot token
 TELEGRAM_CHAT_ID = "@BotardGold"     # Replace with your Telegram chat ID or channel username
 WEBHOOK_SECRET = ""       # Set this for security
-FILES_TO_MONITOR = ["botard_alert.json", "rules.json", "rules_urgent.json"]
+FILES_TO_MONITOR = ["botard_alert.json", "rules.json", "rules_urgent.json", "botard_trade_closed.json"]
 CHECK_INTERVAL = 5
 TRADINGVIEW_WEBHOOK_URL = "https://botard-server.onrender.com"  # Your Render URL
 
@@ -25,14 +25,29 @@ TRADINGVIEW_WEBHOOK_URL = "https://botard-server.onrender.com"  # Your Render UR
 def send_to_telegram(rules):
     try:
         # Format the Telegram message
-        message = (
-            f"🚨 New Signal\n"
-            f"Symbol: {rules.get('symbol', 'XAUUSD')}\n"
-            f"Action: {rules.get('signal', 'N/A').upper()}\n"
-            f"Price: {rules.get('price', 'N/A')}\n"
-            f"Confidence: {rules.get('confidence', 'N/A')}%\n"
-            f"Timestamp: {rules.get('timestamp', 'N/A')}"
-        )
+        message = ""
+
+        if "Trade Closed" in rules.get("message", ""):
+            message = (
+                f"✅ Trade Closed\n\n"
+                f"🔹 <b>Action:</b> SELL\n"
+                f"🔹 <b>Entry:</b> {rules.get('price', 'N/A')}\n"
+                f"🔹 <b>Exit:</b> {rules.get('exit_price', 'N/A')}\n"
+                f"🔹 <b>Outcome:</b> {'✅ Win' if rules.get('outcome') == 'win' else '❌ Loss'}\n"
+                f"🔹 <b>Bars Held:</b> {rules.get('duration', 'N/A')}\n"
+                f"🕒 <b>Timestamp:</b> {rules.get('timestamp', 'N/A')}"
+            )
+
+        else:
+            message = (
+                f"📈 <b>New Signal from Botard</b>\n\n"
+                f"🔹 <b>Action:</b> {rules.get('signal', 'N/A').upper()}\n"
+                f"🔹 <b>Entry:</b> {rules.get('price', 'N/A')}\n"
+                f"🔹 <b>Confidence:</b> {rules.get('confidence', 'N/A')}%\n"
+                f"🔹 <b>Sentiment:</b> {rules.get('sentiment', 'N/A')}\n"
+                f"🔹 <b>News Impact:</b> {rules.get('news_impact', 'N/A')}\n"
+                f"🕒 <b>Timestamp:</b> {rules.get('timestamp', 'N/A')}"
+            )
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
             "chat_id": TELEGRAM_CHAT_ID,
