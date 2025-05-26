@@ -13,9 +13,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN = "123456789:ABCDefGHIjklmnopQRSTuvwxYZ"  # Replace with your Telegram bot token
-TELEGRAM_CHAT_ID = "your_chat_id_here"     # Replace with your Telegram chat ID or channel username
-WEBHOOK_SECRET = "@BotardGold"       # Set this for security
+TELEGRAM_BOT_TOKEN = "7836750392:AAFddan2pP9J95kbG3GDhyQk18mG2OqQkms"  # Replace with your Telegram bot token
+TELEGRAM_CHAT_ID = "@BotardGold"     # Replace with your Telegram chat ID or channel username
+WEBHOOK_SECRET = ""       # Set this for security
 FILES_TO_MONITOR = ["botard_alert.json", "rules.json", "rules_urgent.json"]
 CHECK_INTERVAL = 5
 TRADINGVIEW_WEBHOOK_URL = "https://botard-server.onrender.com"  # Your Render URL
