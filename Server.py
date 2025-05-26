@@ -12,11 +12,40 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-WEBHOOK_SECRET = ""  # Set this for security
-FILES_TO_MONITOR = ["botard_alert.json", "", ""]
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN = "123456789:ABCDefGHIjklmnopQRSTuvwxYZ"  # Replace with your Telegram bot token
+TELEGRAM_CHAT_ID = "your_chat_id_here"     # Replace with your Telegram chat ID or channel username
+WEBHOOK_SECRET = "@BotardGold"       # Set this for security
+FILES_TO_MONITOR = ["botard_alert.json", "rules.json", "rules_urgent.json"]
 CHECK_INTERVAL = 5
-TRADINGVIEW_WEBHOOK_URL = "https://botard-server.onrender.com"  # Replace with actual ngrok URL
+TRADINGVIEW_WEBHOOK_URL = "https://botard-server.onrender.com"  # Your Render URL
 
+# Function to send signal to Telegram
+@retry(stop_max_attempt_number=3, wait_fixed=5000)
+def send_to_telegram(rules):
+    try:
+        # Format the Telegram message
+        message = (
+            f"🚨 New Signal\n"
+            f"Symbol: {rules.get('symbol', 'XAUUSD')}\n"
+            f"Action: {rules.get('signal', 'N/A').upper()}\n"
+            f"Price: {rules.get('price', 'N/A')}\n"
+            f"Confidence: {rules.get('confidence', 'N/A')}%\n"
+            f"Timestamp: {rules.get('timestamp', 'N/A')}"
+        )
+        telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "HTML"  # Optional: Use HTML for formatting
+        }
+        response = requests.post(telegram_url, json=payload)
+        response.raise_for_status()
+        logger.info(f"📤 Sent to Telegram: {message}")
+    except Exception as e:
+        logger.error(f"Failed to send to Telegram: {e}")
+
+# Existing webhook to TradingView
 @retry(stop_max_attempt_number=3, wait_fixed=5000)
 def send_webhook_to_tradingview(rules):
     headers = {"Content-Type": "application/json"}
@@ -42,7 +71,6 @@ def send_webhook_to_tradingview(rules):
     response = requests.post(TRADINGVIEW_WEBHOOK_URL, json={"message": simple_message})
     response.raise_for_status()
     logger.info(f"📤 Webhook payload sent: {simple_message}")
-
 
 @app.route("/files/<path:filename>")
 def serve_file(filename):
@@ -82,6 +110,7 @@ def receive_webhook():
 
         if data.get("source") == "bot":
             logger.info("Bot-generated signal received. Skipping rule file update.")
+            send_to_telegram(data)  # Forward bot signal to Telegram
             return jsonify({"status": "success", "message": "Bot signal processed"}), 200
 
         rules = {
@@ -107,6 +136,7 @@ def receive_webhook():
         with open(rules_file, "w") as f:
             json.dump(rules, f, indent=4)
         logger.info(f"Updated {rules_file} based on external alert")
+        send_to_telegram(rules)  # Forward external signal to Telegram
         return jsonify({"status": "success", "message": "Webhook processed"}), 200
 
     except Exception as e:
@@ -142,6 +172,7 @@ def monitor_rules_files():
                         with open(file, "r") as f:
                             rules = json.load(f)
                         send_webhook_to_tradingview(rules)
+                        send_to_telegram(rules)  # Forward file-based signal to Telegram
                         last_hashes[file] = current_hash
                 else:
                     logger.warning(f"{file} not found")
@@ -153,6 +184,5 @@ def monitor_rules_files():
 if __name__ == "__main__":
     monitor_thread = Thread(target=monitor_rules_files, daemon=True)
     monitor_thread.start()
-    logger.info("Started monitoring botard_alert.json and rules_urgent.json")
+    logger.info("Started monitoring botard_alert.json, rules.json, and rules_urgent.json")
     app.run(host='0.0.0.0', port=8000, debug=False)
-
