@@ -183,12 +183,18 @@ def monitor_rules_files():
                 if os.path.exists(file):
                     current_hash = get_file_hash(file)
                     if current_hash and current_hash != last_hashes[file]:
-                        logger.info(f"Detected update to {file}")
+                        logger.info(f"📄 Detected update to {file}")
                         with open(file, "r") as f:
                             rules = json.load(f)
-                        send_webhook_to_tradingview(rules)
-                        send_to_telegram(rules)  # Forward file-based signal to Telegram
+
+                        # Forward to TradingView only for rules*.json
+                        if file.startswith("rules"):
+                            send_webhook_to_tradingview(rules)
+
+                        # Forward to Telegram for all monitored files
+                        send_to_telegram(rules)
                         last_hashes[file] = current_hash
+
                 else:
                     logger.warning(f"{file} not found")
             time.sleep(CHECK_INTERVAL)
