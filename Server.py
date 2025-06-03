@@ -19,6 +19,13 @@ WEBHOOK_SECRET = ""       # Set this for security
 FILES_TO_MONITOR = ["botard_alert.json", "rules.json", "rules_urgent.json", "botard_trade_closed.json"]
 CHECK_INTERVAL = 5
 TRADINGVIEW_WEBHOOK_URL = "https://botard-server.onrender.com"  # Your Render URL
+SEND_TELEGRAM_ALERTS = False  # Set to False to disable sends
+
+@app.route("/toggle-telegram", methods=["POST"])
+def toggle_telegram():
+    global SEND_TELEGRAM_ALERTS
+    SEND_TELEGRAM_ALERTS = not SEND_TELEGRAM_ALERTS
+    return jsonify({"telegram_enabled": SEND_TELEGRAM_ALERTS})
 
 # Function to send signal to Telegram
 @retry(stop_max_attempt_number=3, wait_fixed=5000)
@@ -119,13 +126,24 @@ def receive_webhook():
             return jsonify({"error": "No payload"}), 400
 
         logger.info(f"Received webhook payload: {data}")
-        with open("webhook_log.json", "a") as f:
-            json.dump({"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "data": dict(data)}, f)
-            f.write("\n")
+             # Safely convert incoming data to dict and log it
+        try:
+            parsed_data = data if isinstance(data, dict) else dict(data)
+            with open("webhook_log.json", "a") as f:
+                json.dump({
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "data": parsed_data
+                }, f)
+                f.write("\n")
+        except Exception as log_err:
+            logger.error(f"⚠️ Failed to write webhook_log.json: {log_err}")
+
 
         if data.get("source") == "bot":
             logger.info("Bot-generated signal received. Skipping rule file update.")
-            send_to_telegram(data)  # Forward bot signal to Telegram
+            if SEND_TELEGRAM_ALERTS:
+                send_to_telegram(data)  
+              # Forward bot signal to Telegram
             return jsonify({"status": "success", "message": "Bot signal processed"}), 200
 
         rules = {
@@ -151,7 +169,9 @@ def receive_webhook():
         with open(rules_file, "w") as f:
             json.dump(rules, f, indent=4)
         logger.info(f"Updated {rules_file} based on external alert")
-        send_to_telegram(rules)  # Forward external signal to Telegram
+        if SEND_TELEGRAM_ALERTS:
+                send_to_telegram(rules)  # or send_to_telegram(rules)
+     # Forward external signal to Telegram
         return jsonify({"status": "success", "message": "Webhook processed"}), 200
 
     except Exception as e:
@@ -192,7 +212,9 @@ def monitor_rules_files():
                             send_webhook_to_tradingview(rules)
 
                         # Forward to Telegram for all monitored files
-                        send_to_telegram(rules)
+                        if SEND_TELEGRAM_ALERTS:
+                            send_to_telegram(rules)  # or send_to_telegram(rules)
+
                         last_hashes[file] = current_hash
 
                 else:
