@@ -108,7 +108,7 @@ def get_signal():
 def receive_webhook():
     try:
         if WEBHOOK_SECRET:
-            auth_header = request.headers.get("X-Webhook-Secret")
+            auth_header = request.headers.get("")
             if auth_header != WEBHOOK_SECRET:
                 logger.warning("Invalid webhook secret")
                 return jsonify({"error": "Unauthorized"}), 401
